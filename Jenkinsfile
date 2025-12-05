@@ -1,34 +1,33 @@
 pipeline {
     agent any
-    
+
     stages {
-        stage("Git Checkout") {
+        
+        stage("Checkout Code") {
             steps {
-                git url: "https://github.com/javahometech/reactjs-app", branch: "main"
+                git branch: 'main', url: "https://github.com/swapnilkhatate/reactjs-app.git"
             }
         }
 
-        stage("Docker Build") {
+        stage("Build Docker Image") {
             steps {
-                bat "docker build -t kammana/react-app:${env.BUILD_NUMBER} ."
+                bat "docker build -t swapnilkhatate/reactjs-app:%BUILD_NUMBER% ."
             }
         }
 
-        stage("Docker Push") {
+        stage("Push to DockerHub") {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'docker_password', usernameVariable: 'docker_user')]) {
-                    bat "docker login -u %docker_user% -p %docker_password%"
+                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                    bat "docker login -u %USER% -p %PASS%"
                 }
-                bat "docker push kammana/react-app:${env.BUILD_NUMBER}"
+                bat "docker push swapnilkhatate/reactjs-app:%BUILD_NUMBER%"
             }
         }
 
-        stage("Dev Deploy") {
+        stage("Run Container Locally") {
             steps {
-                sshagent(['docker-dev']) {
-                    bat "ssh -o StrictHostKeyChecking=no ec2-user@172.31.15.57 docker rm -f react 2>NUL"
-                    bat "ssh ec2-user@172.31.15.57 docker run -d -p 80:80 --name=react kammana/react-app:${env.BUILD_NUMBER}"
-                }
+                bat "docker rm -f reactjs 2>NUL"
+                bat "docker run -d -p 3000:80 --name reactjs swapnilkhatate/reactjs-app:%BUILD_NUMBER%"
             }
         }
     }
