@@ -17,7 +17,7 @@ pipeline {
 
         stage("Push to DockerHub") {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                withCredentials([usernamePassword(credentialsId: 'Docker-key', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
                     bat "docker login -u %USER% -p %PASS%"
                 }
                 bat "docker push swapnilkhatate/reactjs-app:%BUILD_NUMBER%"
